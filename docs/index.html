@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Uma explicação visual de Counting Sort e de seu uso como subrotina do Radix Sort LSD." />
+    <meta name="theme-color" content="#160d22" />
+    <title>DETONADO RADIX SORT</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23a81945'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-family='Georgia' font-size='42' fill='%23f4bf4f'%3ER%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#counting-sort">Pular para o conteúdo</a>
+
+    <header class="topbar">
+      <a class="brand" href="#counting-sort" aria-label="Detonado Radix Sort — início">
+        <span class="brand-mark" aria-hidden="true">R</span>
+        <span>DETONADO RADIX SORT</span>
+      </a>
+      <div class="header-actions">
+        <nav aria-label="Navegação principal">
+          <a href="#counting-sort">Counting Sort</a>
+          <a href="#ponte-radix">Por que o Radix usa?</a>
+          <a href="#radix-lsd">Radix LSD</a>
+        </nav>
+        <button class="sonic-toggle" id="sonic-mode-button" type="button" role="switch" aria-checked="false">
+          <span class="sonic-switch" aria-hidden="true"><span class="sonic-switch-knob"></span><span class="sonic-switch-state">OFF</span></span>
+          <span>Ativar modo Sonic</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="counting-hero" id="counting-sort" aria-labelledby="counting-title">
+        <div class="counting-intro">
+          <p class="eyebrow">Parte 1 · A subrotina</p>
+          <h1 id="counting-title">Primeiro,<br /><em>Counting Sort.</em></h1>
+          <p class="lead">
+            Antes de ordenar dígito por dígito, precisamos de uma forma estável de organizar
+            valores inteiros. Counting Sort faz isso contando ocorrências — sem comparar pares.
+          </p>
+          <div class="definition-card">
+            <span>IDEIA CENTRAL</span>
+            <p>Se sabemos quantas vezes cada valor aparece, sabemos quantos lugares reservar para ele na saída.</p>
+          </div>
+        </div>
+
+        <div class="counting-demo" aria-labelledby="demo-title">
+          <div class="demo-header">
+            <div><p>EXEMPLO AUTOMÁTICO</p><h2 id="demo-title">A dança da contagem</h2></div>
+            <span class="demo-status" id="counting-demo-status" aria-live="polite">Contando ocorrências</span>
+          </div>
+
+          <div class="demo-controls" aria-label="Controles da demonstração do Counting Sort">
+            <button id="counting-play-button" type="button" aria-pressed="false">Pausar animação</button>
+            <button id="counting-step-button" type="button">Próximo passo</button>
+            <div class="demo-speed-control" aria-label="Velocidade da animação">
+              <span>Velocidade</span>
+              <button id="counting-slower-button" type="button" aria-label="Diminuir velocidade">−</button>
+              <strong id="counting-speed-label" aria-live="polite">0,75×</strong>
+              <button id="counting-faster-button" type="button" aria-label="Aumentar velocidade">+</button>
+            </div>
+          </div>
+
+          <div class="demo-row">
+            <div class="demo-row-label"><strong>A</strong><span>entrada</span></div>
+            <div class="number-strip" id="counting-input" aria-label="Vetor de entrada"></div>
+          </div>
+
+          <div class="demo-row count-row">
+            <div class="demo-row-label"><strong>C</strong><span>contagem</span></div>
+            <div class="count-strip" id="counting-counts" aria-label="Vetor de contagem"></div>
+          </div>
+
+          <div class="demo-row">
+            <div class="demo-row-label"><strong>B</strong><span>saída</span></div>
+            <div class="number-strip output-strip" id="counting-output" aria-label="Vetor de saída"></div>
+          </div>
+
+          <div class="demo-narration" id="counting-demo-narration">Começamos com C zerado e percorremos a entrada.</div>
+          <div class="demo-progress" aria-hidden="true"><span id="counting-demo-progress"></span></div>
+        </div>
+      </section>
+
+      <section class="counting-explanation" aria-labelledby="steps-title">
+        <div class="section-heading">
+          <p class="eyebrow">Como funciona</p>
+          <h2 id="steps-title">Três momentos,<br />uma saída ordenada.</h2>
+          <p>Vamos usar <code>A = [4, 2, 2, 8, 3, 3, 1]</code>. O maior valor é 8, então C tem posições de 0 a 8.</p>
+        </div>
+
+        <ol class="large-steps">
+          <li>
+            <span class="step-index">01</span>
+            <div><h3>Conte as ocorrências</h3><p>Para cada valor <code>x</code> da entrada, faça <code>C[x]++</code>. Ao final, C informa quantas vezes cada número apareceu.</p></div>
+            <code class="step-example">C = [0, 1, 2, 2, 1, 0, 0, 0, 1]</code>
+          </li>
+          <li>
+            <span class="step-index">02</span>
+            <div><h3>Some acumuladamente</h3><p>Faça <code>C[i] += C[i−1]</code>. Agora C[i] significa: “quantos elementos são menores ou iguais a i?”.</p></div>
+            <code class="step-example">C = [0, 1, 3, 5, 6, 6, 6, 6, 7]</code>
+          </li>
+          <li>
+            <span class="step-index">03</span>
+            <div><h3>Preencha a saída de trás para frente</h3><p>Para cada x, use <code>C[x]−1</code> como posição em B e depois diminua C[x]. Ler A ao contrário preserva a estabilidade.</p></div>
+            <code class="step-example">B = [1, 2, 2, 3, 3, 4, 8]</code>
+          </li>
+        </ol>
+
+        <aside class="chairs-explainer">
+          <div>
+            <p class="eyebrow">Uma imagem mental melhor</p>
+            <h3>A acumulada reserva cadeiras.</h3>
+            <p>
+              Se C[3] vale 5, existem cinco elementos menores ou iguais a 3. Portanto,
+              o último 3 ocupa a cadeira de índice 4. Depois usamos a cadeira anterior.
+            </p>
+          </div>
+          <div class="chairs" aria-label="Cadeiras reservadas para os valores ordenados">
+            <span data-value="1">1<small>0</small></span><span data-value="2">2<small>1</small></span><span data-value="2">2<small>2</small></span><span data-value="3">3<small>3</small></span><span data-value="3">3<small>4</small></span><span data-value="4">4<small>5</small></span><span data-value="8">8<small>6</small></span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="code-section" aria-labelledby="code-title">
+        <div class="code-copy">
+          <p class="eyebrow">Implementação em C++</p>
+          <h2 id="code-title">O algoritmo completo.</h2>
+          <p>Esta versão ordena inteiros não negativos. As três regiões destacadas correspondem exatamente às três etapas da animação.</p>
+          <ul>
+            <li><strong>Tempo:</strong> O(n + k)</li>
+            <li><strong>Memória:</strong> O(n + k)</li>
+            <li><strong>Estável:</strong> sim, porque preenche B de trás para frente</li>
+          </ul>
+        </div>
+        <div class="code-panel" role="region" aria-label="Código C++ do Counting Sort" tabindex="0">
+<pre><code><span class="code-dim">#include &lt;algorithm&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+using namespace std;</span>
+
+void countingSort(vector&lt;int&gt;&amp; A) {
+    int maior = *max_element(A.begin(), A.end());
+    vector&lt;int&gt; C(maior + 1, 0);
+    vector&lt;int&gt; B(A.size());
+
+    <span class="code-one">// 1. Conta quantas vezes cada valor aparece
+    for (int x : A)
+        C[x]++;</span>
+
+    <span class="code-two">// 2. Calcula as posições acumuladas
+    for (int i = 1; i &lt;= maior; i++)
+        C[i] += C[i - 1];</span>
+
+    <span class="code-three">// 3. Monta a saída estável, da direita para a esquerda
+    for (int i = (int)A.size() - 1; i &gt;= 0; i--) {
+        int x = A[i];
+        B[C[x] - 1] = x;
+        C[x]--;
+    }</span>
+
+    A = B;
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="radix-bridge" id="ponte-radix" aria-labelledby="bridge-title">
+        <div class="bridge-heading">
+          <p class="eyebrow">Parte 2 · A conexão</p>
+          <h2 id="bridge-title">O Radix LSD não substitui o Counting Sort.<br /><em>Ele o chama várias vezes.</em></h2>
+        </div>
+        <div class="bridge-diagram" aria-label="Counting Sort aplicado sucessivamente às unidades, dezenas e centenas">
+          <div><span>1ª chamada</span><strong>Counting Sort</strong><small>chave = unidades</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span>2ª chamada</span><strong>Counting Sort</strong><small>chave = dezenas</small></div>
+          <i aria-hidden="true">→</i>
+          <div><span>3ª chamada</span><strong>Counting Sort</strong><small>chave = centenas</small></div>
+        </div>
+        <div class="bridge-reasons">
+          <article><span>01</span><h3>Só existem 10 chaves</h3><p>Em cada passada, o dígito está entre 0 e 9. Portanto, C sempre tem tamanho 10.</p></article>
+          <article><span>02</span><h3>É rápido por passada</h3><p>Cada chamada custa O(n + 10), sem comparar um número com outro.</p></article>
+          <article><span>03</span><h3>Precisa ser estável</h3><p>A ordem obtida nas unidades deve sobreviver quando ordenamos pelas dezenas.</p></article>
+        </div>
+        <div class="radix-code-note">
+          <span>No Radix, muda apenas a chave:</span>
+          <code>int digito = (A[i] / expoente) % 10;</code>
+        </div>
+      </section>
+
+      <section class="code-section radix-code-section" id="codigo-radix" aria-labelledby="radix-code-title">
+        <div class="code-copy">
+          <p class="eyebrow">Radix LSD em C++</p>
+          <h2 id="radix-code-title">A subrotina dentro do algoritmo.</h2>
+          <p>
+            <code>radixSort</code> percorre as casas decimais. Em cada volta, chama
+            <code>countingSortPorDigito</code>, que usa somente o dígito indicado pelo expoente.
+          </p>
+          <ul>
+            <li><strong>expoente = 1:</strong> unidades</li>
+            <li><strong>expoente = 10:</strong> dezenas</li>
+            <li><strong>expoente = 100:</strong> centenas</li>
+          </ul>
+        </div>
+        <div class="code-panel" role="region" aria-label="Código C++ do Radix Sort LSD" tabindex="0">
+<pre><code><span class="code-dim">#include &lt;algorithm&gt;
+#include &lt;vector&gt;
+using namespace std;</span>
+
+<span class="code-one">// Counting Sort estável usando apenas um dígito
+void countingSortPorDigito(vector&lt;int&gt;&amp; A,
+                           long long expoente) {
+    int n = (int)A.size();
+    vector&lt;int&gt; B(n);
+    int C[10] = {0};</span>
+
+    <span class="code-two">// 1. Conta o dígito atual de cada número
+    for (int x : A) {
+        int digito = (x / expoente) % 10;
+        C[digito]++;
+    }
+
+    // 2. Calcula as posições acumuladas
+    for (int i = 1; i &lt; 10; i++)
+        C[i] += C[i - 1];</span>
+
+    <span class="code-three">// 3. Preenche B da direita para a esquerda
+    for (int i = n - 1; i &gt;= 0; i--) {
+        int digito = (A[i] / expoente) % 10;
+        B[C[digito] - 1] = A[i];
+        C[digito]--;
+    }
+
+    A = B;
+}</span>
+
+void radixSort(vector&lt;int&gt;&amp; A) {
+    if (A.empty()) return;
+
+    int maior = *max_element(A.begin(), A.end());
+
+    <span class="code-one">// Unidades, dezenas, centenas...
+    for (long long expoente = 1;
+         maior / expoente &gt; 0;
+         expoente *= 10) {
+        countingSortPorDigito(A, expoente);
+    }</span>
+}</code></pre>
+        </div>
+      </section>
+
+      <section class="radix-section" id="radix-lsd" aria-labelledby="radix-title">
+        <div class="radix-intro">
+          <p class="eyebrow">Parte 3 · A coreografia completa</p>
+          <h2 id="radix-title">Agora sim:<br /><em>Radix Sort LSD.</em></h2>
+          <p>
+            Como o Counting Sort já foi explicado, cada passo abaixo representa uma chamada completa da subrotina.
+            Observe apenas qual dígito está sendo usado e como a ordem muda.
+          </p>
+        </div>
+
+        <div class="control-card" aria-label="Controles da simulação do Radix Sort">
+          <label for="numbers-input">Números do grupo</label>
+          <div class="input-row">
+            <input id="numbers-input" type="text" inputmode="numeric" value="170, 45, 75, 90, 802, 24, 2, 66" aria-describedby="input-help input-error" autocomplete="off" />
+            <button class="icon-button" id="shuffle-button" type="button" title="Sortear números" aria-label="Sortear números">↻</button>
+          </div>
+          <p class="field-help" id="input-help">Use de 2 a 10 inteiros entre 0 e 999.</p>
+          <p class="field-error" id="input-error" role="alert"></p>
+          <div class="primary-actions">
+            <button class="dance-button" id="dance-button" type="button"><span aria-hidden="true">▶</span><span>Dançar e ordenar</span></button>
+            <button class="secondary-button" id="step-button" type="button">Próximo dígito</button>
+            <button class="secondary-button" id="reset-button" type="button">Recomeçar</button>
+          </div>
+          <div class="speed-control">
+            <label for="speed-input">Ritmo</label>
+            <input id="speed-input" type="range" min="500" max="1800" step="100" value="1000" />
+            <div class="speed-labels" aria-hidden="true"><span>didático</span><span>rápido</span></div>
+          </div>
+        </div>
+
+        <div class="stage-card">
+          <div class="stage-header">
+            <div><p class="stage-kicker" id="pass-label">ENTRADA ORIGINAL</p><h3 id="stage-title">O grupo está no palco</h3></div>
+            <div class="digit-focus" aria-label="Dígito usado nesta chamada"><span>Counting Sort por</span><strong id="digit-name">—</strong></div>
+          </div>
+          <div class="explanation-strip" id="explanation-strip" aria-live="polite">Cada clique executa um Counting Sort estável completo.</div>
+          <div class="dance-floor" id="dance-floor" aria-label="Dançarinos no palco"></div>
+          <div class="pass-timeline" id="pass-timeline" aria-label="Histórico das passadas"></div>
+          <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+          <p class="sr-only" id="live-status" aria-live="assertive"></p>
+        </div>
+      </section>
+
+      <section class="complexity" id="complexidade" aria-labelledby="complexity-title">
+        <div><p class="eyebrow">Custo total</p><h2 id="complexity-title">Counting × Radix</h2></div>
+        <div class="formula-card"><span>Counting Sort</span><strong>O(n + k)</strong><p>Uma ordenação; k é a faixa de valores.</p></div>
+        <div class="formula-card"><span>Radix LSD</span><strong>O(d · (n + 10))</strong><p>d dígitos; uma chamada estável por casa decimal.</p></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Counting Sort estável como subrotina do Radix Sort LSD.</p>
+      <a href="https://www.youtube.com/watch?v=3San3uKKHgg" target="_blank" rel="noreferrer">Inspiração: algoritmos com dança folclórica ↗</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
