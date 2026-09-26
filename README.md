@@ -12,7 +12,7 @@ subrotina estável pelo Radix Sort LSD. Também é possível informar outros
 números e acompanhar a ordenação visualmente.
 
 ## Materiais
-
+- [Vídeo-Aula no Youtube](https://youtu.be/MLRVCoqTTvY)
 - [Caderno de questões e gabarito](questoes.md)
 - [Apresentação em PDF](Counting%20e%20Radix%20Sort.pdf)
 - [Código-fonte da demonstração](docs/)
